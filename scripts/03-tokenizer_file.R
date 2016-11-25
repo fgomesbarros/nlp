@@ -5,29 +5,33 @@
 # 0. Reads packages needed
 require(quanteda)
 require(readr)
+require(magrittr)
 
 # 1. Function call
 tokenizer <- function(file_path, language, fraction) {
 
-  # Reads file
+  # Reads files
   txt <- read_lines(file_path)
+  profanity <- read_csv("data/Terms-to-Block.csv")
   
   # Calculates new size
   new_size <- trunc(length(txt) * fraction)
     
-  # Samples text
+  # Samples text vector
   txt <- quanteda::sample(x = txt, size = new_size)
   
   # Create corpus
   myCorpus <- corpus(txt)
   
-  # Creates tokens
-  txt_tk <- quanteda::tokenize(txt, removeNumbers = TRUE, removePunct = TRUE, 
-                               removeSeparators = TRUE, removeSymbols = TRUE, 
-                               removeTwitter = TRUE) 
-  # Removes stop words
-  txt_tk <- removeFeatures(txt_tk, stopwords(language))
+  # Creates tokens and cleans txt
+  txt_tk <- txt %>% 
+    quanteda::tokenize(removeNumbers = TRUE, removePunct = TRUE, 
+                       removeSeparators = TRUE, removeSymbols = TRUE, 
+                       removeTwitter = TRUE) %>% 
+    # Removes stop and profanity words 
+    removeFeatures(stopwords(language)) %>% 
+    removeFeatures(profanity$word)
   
-  # Returns tokenizered list
+  # Returns tokenized list
   return(txt_tk)
 }
